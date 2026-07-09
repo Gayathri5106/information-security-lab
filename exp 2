@@ -1,0 +1,138 @@
+import java.util.Arrays;
+
+public class TranspositionCipher {
+
+    public static void main(String[] args) {
+
+        String plaintext = "attack postponed until two am";
+
+        int[] columnKey = {3, 4, 2, 1, 5, 6, 7};
+        int[] rowKey = {4, 2, 3, 1};
+
+        // Encrypt using Column Transposition
+        String columnTransposition = columnarTransposeEncrypt(plaintext, columnKey);
+        System.out.println("Column Transposition: " + columnTransposition);
+
+        // Encrypt using Row Transposition
+        String finalCipherText = rowTransposeEncrypt(columnTransposition, rowKey);
+        System.out.println("Final Cipher Text: " + finalCipherText);
+
+        // Decrypt
+        String decryptedColumnTransposition = rowTransposeDecrypt(finalCipherText, rowKey);
+        String decryptedPlaintext = columnarTransposeDecrypt(decryptedColumnTransposition, columnKey);
+
+        System.out.println("Decrypted Plain Text: " + decryptedPlaintext);
+    }
+
+    private static String columnarTransposeEncrypt(String text, int[] key) {
+
+        text = text.replaceAll("\\s+", "").toUpperCase();
+
+        int numRows = (int) Math.ceil((double) text.length() / key.length);
+        char[][] matrix = new char[numRows][key.length];
+
+        // Fill matrix row-wise
+        int index = 0;
+        for (int i = 0; i < numRows; i++) {
+            for (int j = 0; j < key.length; j++) {
+                if (index < text.length()) {
+                    matrix[i][j] = text.charAt(index++);
+                } else {
+                    matrix[i][j] = 'X';
+                }
+            }
+        }
+
+        // Read columns based on key
+        StringBuilder cipherText = new StringBuilder();
+
+        for (int col : key) {
+            for (int i = 0; i < numRows; i++) {
+                cipherText.append(matrix[i][col - 1]);
+            }
+        }
+
+        return cipherText.toString();
+    }
+
+    private static String rowTransposeEncrypt(String text, int[] key) {
+
+        int numCols = (int) Math.ceil((double) text.length() / key.length);
+        char[][] matrix = new char[key.length][numCols];
+
+        // Fill matrix column-wise
+        int index = 0;
+        for (int i = 0; i < numCols; i++) {
+            for (int j = 0; j < key.length; j++) {
+                if (index < text.length()) {
+                    matrix[j][i] = text.charAt(index++);
+                } else {
+                    matrix[j][i] = 'X';
+                }
+            }
+        }
+
+        // Read rows based on key
+        StringBuilder cipherText = new StringBuilder();
+
+        for (int row : key) {
+            for (int i = 0; i < numCols; i++) {
+                cipherText.append(matrix[row - 1][i]);
+            }
+        }
+
+        return cipherText.toString();
+    }
+
+    private static String rowTransposeDecrypt(String text, int[] key) {
+
+        int numCols = (int) Math.ceil((double) text.length() / key.length);
+        char[][] matrix = new char[key.length][numCols];
+
+        // Fill rows according to key
+        int index = 0;
+
+        for (int row : key) {
+            for (int i = 0; i < numCols; i++) {
+                matrix[row - 1][i] = text.charAt(index++);
+            }
+        }
+
+        // Read matrix column-wise
+        StringBuilder plainText = new StringBuilder();
+
+        for (int i = 0; i < numCols; i++) {
+            for (int j = 0; j < key.length; j++) {
+                plainText.append(matrix[j][i]);
+            }
+        }
+
+        return plainText.toString();
+    }
+
+    private static String columnarTransposeDecrypt(String text, int[] key) {
+
+        int numRows = (int) Math.ceil((double) text.length() / key.length);
+        char[][] matrix = new char[numRows][key.length];
+
+        // Fill columns according to key
+        int index = 0;
+
+        for (int col : key) {
+            for (int i = 0; i < numRows; i++) {
+                matrix[i][col - 1] = text.charAt(index++);
+            }
+        }
+
+        // Read matrix row-wise
+        StringBuilder plainText = new StringBuilder();
+
+        for (int i = 0; i < numRows; i++) {
+            for (int j = 0; j < key.length; j++) {
+                plainText.append(matrix[i][j]);
+            }
+        }
+
+        return plainText.toString();
+    }
+}
