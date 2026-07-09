@@ -1,0 +1,174 @@
+import java.util.*;
+
+public class PlayfairCipher {
+
+    private static char[][] matrix = new char[5][5];
+
+    public static void main(String[] args) {
+
+        String keyword = "information";
+        String plaintext = "The key is hidden under the door pad with the encryption key";
+
+        // Generate key matrix
+        generateKeyMatrix(keyword);
+
+        // Display key matrix
+        System.out.println("Playfair Key Matrix:");
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 5; j++) {
+                System.out.print(matrix[i][j] + " ");
+            }
+            System.out.println();
+        }
+
+        // Prepare plaintext
+        String preparedText = prepareText(plaintext);
+        System.out.println("\nPrepared Text: " + preparedText);
+
+        // Encrypt
+        String encryptedText = encrypt(preparedText);
+        System.out.println("Encrypted Text: " + encryptedText);
+
+        // Decrypt
+        String decryptedText = decrypt(encryptedText);
+        System.out.println("Decrypted Text: " + decryptedText);
+    }
+
+    private static void generateKeyMatrix(String key) {
+        boolean[] alphabet = new boolean[26];
+        int row = 0, col = 0;
+
+        // Insert keyword
+        for (char c : key.toUpperCase().toCharArray()) {
+            if (c == 'J')
+                c = 'I';
+
+            if (!alphabet[c - 'A']) {
+                matrix[row][col] = c;
+                alphabet[c - 'A'] = true;
+                col++;
+
+                if (col == 5) {
+                    col = 0;
+                    row++;
+                }
+            }
+        }
+
+        // Insert remaining letters
+        for (char c = 'A'; c <= 'Z'; c++) {
+            if (c == 'J')
+                continue;
+
+            if (!alphabet[c - 'A']) {
+                matrix[row][col] = c;
+                alphabet[c - 'A'] = true;
+                col++;
+
+                if (col == 5) {
+                    col = 0;
+                    row++;
+                }
+            }
+        }
+    }
+
+    private static String prepareText(String text) {
+
+        text = text.toUpperCase()
+                .replaceAll("[^A-Z]", "")
+                .replace('J', 'I');
+
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < text.length(); i++) {
+            char c1 = text.charAt(i);
+            sb.append(c1);
+
+            if (i < text.length() - 1 && text.charAt(i + 1) == c1) {
+                sb.append('X');
+            }
+        }
+
+        if (sb.length() % 2 != 0) {
+            sb.append('X');
+        }
+
+        return sb.toString();
+    }
+
+    private static String encrypt(String text) {
+
+        StringBuilder cipherText = new StringBuilder();
+
+        for (int i = 0; i < text.length(); i += 2) {
+
+            char[] pair = { text.charAt(i), text.charAt(i + 1) };
+
+            int[] pos1 = findPosition(pair[0]);
+            int[] pos2 = findPosition(pair[1]);
+
+            if (pos1[0] == pos2[0]) {
+                // Same row
+                cipherText.append(matrix[pos1[0]][(pos1[1] + 1) % 5]);
+                cipherText.append(matrix[pos2[0]][(pos2[1] + 1) % 5]);
+
+            } else if (pos1[1] == pos2[1]) {
+                // Same column
+                cipherText.append(matrix[(pos1[0] + 1) % 5][pos1[1]]);
+                cipherText.append(matrix[(pos2[0] + 1) % 5][pos2[1]]);
+
+            } else {
+                // Rectangle
+                cipherText.append(matrix[pos1[0]][pos2[1]]);
+                cipherText.append(matrix[pos2[0]][pos1[1]]);
+            }
+        }
+
+        return cipherText.toString();
+    }
+
+    private static String decrypt(String text) {
+
+        StringBuilder plainText = new StringBuilder();
+
+        for (int i = 0; i < text.length(); i += 2) {
+
+            char[] pair = { text.charAt(i), text.charAt(i + 1) };
+
+            int[] pos1 = findPosition(pair[0]);
+            int[] pos2 = findPosition(pair[1]);
+
+            if (pos1[0] == pos2[0]) {
+                // Same row
+                plainText.append(matrix[pos1[0]][(pos1[1] + 4) % 5]);
+                plainText.append(matrix[pos2[0]][(pos2[1] + 4) % 5]);
+
+            } else if (pos1[1] == pos2[1]) {
+                // Same column
+                plainText.append(matrix[(pos1[0] + 4) % 5][pos1[1]]);
+                plainText.append(matrix[(pos2[0] + 4) % 5][pos2[1]]);
+
+            } else {
+                // Rectangle
+                plainText.append(matrix[pos1[0]][pos2[1]]);
+                plainText.append(matrix[pos2[0]][pos1[1]]);
+            }
+        }
+
+        return plainText.toString();
+    }
+
+    private static int[] findPosition(char c) {
+
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 5; j++) {
+                if (matrix[i][j] == c) {
+                    return new int[] { i, j };
+                }
+            }
+        }
+
+        return null;
+    }
+}
